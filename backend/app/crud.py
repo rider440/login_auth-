@@ -1,5 +1,6 @@
 import random
 import string
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from app import models
 from app import schemas
@@ -52,8 +53,16 @@ def verify_otp(db: Session, phone: str, otp: str) -> bool:
         .order_by(models.OTPStore.created_at.desc())
         .first()
     )
-    if record:
-        record.is_used = True
-        db.commit()
-        return True
-    return False
+    if not record:
+        return False
+
+    # Mark as used to prevent replay attacks
+    record.is_used = True
+    db.commit()
+
+    # Check if expired (5 minutes)
+    now = datetime.now(timezone.utc)
+    if now - record.created_at > timedelta(minutes=5):
+        return False
+
+    return True
