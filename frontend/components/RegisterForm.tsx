@@ -38,9 +38,13 @@ export default function RegisterForm() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    if (e.target.id === "number") {
+      value = value.replace(/\D/g, "").slice(0, 10);
+    }
     setFormData({
       ...formData,
-      [e.target.id]: e.target.value
+      [e.target.id]: value
     });
   };
 
@@ -86,6 +90,7 @@ export default function RegisterForm() {
             placeholder="1234567890"
             value={formData.number}
             onChange={handleChange}
+            maxLength={10}
             style={{ paddingLeft: '2.75rem' }}
             required
           />
@@ -124,7 +129,7 @@ export default function RegisterForm() {
         </div>
       </div>
 
-      <button type="submit" disabled={isLoading}>
+      <button type="submit" disabled={isLoading || formData.number.length !== 10}>
         {isLoading ? "Creating Account..." : "Register Now"}
         {!isLoading && <ArrowRight size={18} />}
       </button>

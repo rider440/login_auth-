@@ -15,7 +15,7 @@ export default function LoginForm() {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length < 10) return;
+    if (phone.length !== 10) return;
 
     setIsLoading(true);
     setError(null);
@@ -102,13 +102,17 @@ export default function LoginForm() {
                 type="tel"
                 placeholder="Enter your number"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setPhone(val);
+                }}
+                maxLength={10}
                 style={{ paddingLeft: '2.75rem' }}
                 required
               />
             </div>
           </div>
-          <button type="submit" disabled={isLoading || phone.length < 10}>
+          <button type="submit" disabled={isLoading || phone.length !== 10}>
             {isLoading ? "Sending..." : "Get OTP"}
             {!isLoading && <ArrowRight size={18} />}
           </button>

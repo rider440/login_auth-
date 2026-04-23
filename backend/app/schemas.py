@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
@@ -7,7 +7,7 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     name: str
-    phone: str
+    phone: str = Field(..., min_length=10, max_length=10, pattern=r"^\d{10}$")
     address: Optional[str] = None
     city: Optional[str] = None
 
@@ -28,12 +28,12 @@ class UserResponse(UserBase):
 # ─── OTP Schemas ─────────────────────────────────────────────────────────────
 
 class SendOTPRequest(BaseModel):
-    phone: str
+    phone: str = Field(..., min_length=10, max_length=10, pattern=r"^\d{10}$")
 
 
 class VerifyOTPRequest(BaseModel):
-    phone: str
-    otp: str
+    phone: str = Field(..., min_length=10, max_length=10, pattern=r"^\d{10}$")
+    otp: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
 
 
 class OTPResponse(BaseModel):
