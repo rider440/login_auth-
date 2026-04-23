@@ -1,0 +1,28 @@
+# Dependencies
+backend/venv/
+frontend/node_modules/
+
+# Next.js build
+frontend/.next/
+frontend/out/
+
+# Environment variables
+.env
+frontend/.env.local
+backend/.env
+
+# Databases
+backend/*.db
+backend/login.db
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
