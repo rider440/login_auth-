@@ -78,6 +78,7 @@ def verify_otp(request: otp_schemas.VerifyOTPRequest, db: Session = Depends(get_
 @app.post("/token", response_model=token_schemas.Token, include_in_schema=False)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     # Swagger uses username/password form fields. We map username -> phone, password -> otp
+    print(f"[DEV] /token received username: '{form_data.username}' password: '{form_data.password}'")
     valid = otp_service.verify_otp(db, form_data.username, form_data.password)
     if not valid:
         raise HTTPException(
