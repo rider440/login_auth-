@@ -10,7 +10,10 @@ class task(Base):
 
     TaskId = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("users.company_id"), nullable=False)
-    TaskName = Column(String, nullable=False)   
+    TaskName = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    status = Column(String, nullable=True, default="Pending")
+    priority = Column(String, nullable=True, default="Normal")
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

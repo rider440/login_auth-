@@ -16,7 +16,7 @@ class EmployeeUpdate(BaseModel):
     Email: Optional[EmailStr] = None
     Phone: Optional[str] = None
     is_active: Optional[bool] = None
-
+        
 class EmployeeOut(EmployeeBase):
     EmpId: int
     company_id: int

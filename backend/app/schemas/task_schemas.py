@@ -4,6 +4,9 @@ from datetime import datetime
 
 class TaskBase(BaseModel):
     TaskName: str
+    description: Optional[str] = None
+    status: Optional[str] = "Pending"
+    priority: Optional[str] = "Normal"
     is_active: Optional[bool] = True
 
 class TaskCreate(TaskBase):

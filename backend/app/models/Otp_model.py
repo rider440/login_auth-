@@ -7,6 +7,6 @@ class OTPStore(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     phone = Column(String(10), index=True, nullable=False)
-    otp = Column(String(6), nullable=False) # Hashed OTP
+    otp = Column(String, nullable=False) # Hashed OTP
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=False)

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { authService } from "@/services/api";
-import { User, Phone, MapPin, Building, LogOut, Loader2 } from "lucide-react";
+import { User, Phone, MapPin, Building, Loader2 } from "lucide-react";
 
 interface UserData {
   name: string;
@@ -36,14 +36,10 @@ export default function DashboardPage() {
     fetchUser();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-  };
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="animate-spin text-primary" size={48} />
         <p className="mt-4 text-muted">Loading your profile...</p>
       </div>
@@ -61,62 +57,51 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="glass-card" style={{ maxWidth: '600px' }}>
-      <div className="flex justify-between items-center mb-8">
+    <div >
+      <div className="page-header">
         <div>
           <h1 style={{ marginBottom: '0.25rem' }}>Dashboard</h1>
           <p className="subtitle" style={{ marginBottom: 0 }}>Welcome back, {user.name.split(' ')[0]}!</p>
         </div>
-        <button 
-          onClick={handleLogout}
-          style={{ 
-            width: 'auto', 
-            padding: '0.6rem 1rem', 
-            background: 'rgba(239, 68, 68, 0.1)', 
-            color: '#ef4444',
-            boxShadow: 'none',
-            fontSize: '0.875rem'
-          }}
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
       </div>
 
-      <div style={{ display: 'grid', gap: '1.25rem' }}>
-        <div className="profile-item">
-          <label>Full Name</label>
-          <div className="profile-value">
-            <User size={20} className="icon" />
-            <span>{user.name}</span>
+      <div className="glass-card" style={{ maxWidth: '100%' }}>
+        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>My Profile</h2>
+        <div style={{ display: 'grid', gap: '1.25rem' }}>
+          <div className="profile-item">
+            <label>Full Name</label>
+            <div className="profile-value">
+              <User size={20} className="icon" />
+              <span>{user.name}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="profile-item">
-          <label>Phone Number</label>
-          <div className="profile-value">
-            <Phone size={20} className="icon" />
-            <span>{user.phone}</span>
+          <div className="profile-item">
+            <label>Phone Number</label>
+            <div className="profile-value">
+              <Phone size={20} className="icon" />
+              <span>{user.phone}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="profile-item">
-          <label>Address</label>
-          <div className="profile-value">
-            <MapPin size={20} className="icon" />
-            <span>{user.address || "Not provided"}</span>
+          <div className="profile-item">
+            <label>Address</label>
+            <div className="profile-value">
+              <MapPin size={20} className="icon" />
+              <span>{user.address || "Not provided"}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="profile-item">
-          <label>City</label>
-          <div className="profile-value">
-            <Building size={20} className="icon" />
-            <span>{user.city || "Not provided"}</span>
+          <div className="profile-item">
+            <label>City</label>
+            <div className="profile-value">
+              <Building size={20} className="icon" />
+              <span>{user.city || "Not provided"}</span>
+            </div>
           </div>
         </div>
       </div>
-
     </div>
+
   );
 }
