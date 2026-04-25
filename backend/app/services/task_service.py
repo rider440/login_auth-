@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.Task_model import task, task_assignee
 from app.models.Employee_model import Employee
-from app.schemas.task_schemas import TaskCreate, TaskUpdate, TaskAssigneeCreate, TaskAssigneeUpdate
+from app.schemas.task_schemas import TaskCreate, TaskUpdate, TaskAssigneeCreate, TaskAssigneeUpdate, TaskBulkAssign
 
 def create_task(db: Session, task_data: TaskCreate, company_id: int):
     db_task = task(**task_data.model_dump(), company_id=company_id)
@@ -89,5 +89,38 @@ def delete_task_assignment(db: Session, assignment_id: int, company_id: int):
         return False
         
     db.delete(db_assignee)
+    db.commit()
+    return True
+
+def bulk_assign_task(db: Session, assign_data: TaskBulkAssign, company_id: int):
+    # Verify task belongs to company
+    db_task = get_task(db, assign_data.task_id, company_id)
+    if not db_task:
+        return None
+    
+    # Filter valid employee IDs (must belong to the company)
+    valid_emp_ids = [
+        e[0] for e in db.query(Employee.EmpId).filter(
+            Employee.EmpId.in_(assign_data.emp_ids),
+            Employee.company_id == company_id
+        ).all()
+    ]
+    
+    # Remove existing assignments that are NOT in the new valid list
+    db.query(task_assignee).filter(
+        task_assignee.task_id == assign_data.task_id,
+        ~task_assignee.emp_id.in_(valid_emp_ids)
+    ).delete(synchronize_session=False)
+    
+    # Get currently assigned IDs after deletion to avoid duplicates
+    remaining_assignments = db.query(task_assignee.emp_id).filter(task_assignee.task_id == assign_data.task_id).all()
+    current_emp_ids = {a[0] for a in remaining_assignments}
+    
+    # Add new assignments
+    for emp_id in valid_emp_ids:
+        if emp_id not in current_emp_ids:
+            new_assignee = task_assignee(task_id=assign_data.task_id, emp_id=emp_id)
+            db.add(new_assignee)
+    
     db.commit()
     return True

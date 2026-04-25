@@ -24,8 +24,8 @@ class task_assignee(Base):
 
 
     TaskAssigneeId = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("tasks.TaskId"), nullable=False)
-    emp_id = Column(Integer, ForeignKey("employees.EmpId"), nullable=False)  
+    task_id = Column(Integer, ForeignKey("tasks.TaskId", ondelete="CASCADE"), nullable=False)
+    emp_id = Column(Integer, ForeignKey("employees.EmpId", ondelete="CASCADE"), nullable=False)  
     status = Column(String, nullable=True, default="Pending")
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -115,6 +115,10 @@ export const taskService = {
   async deleteTaskAssignment(assignmentId: number) {
     const response = await api.delete(`/tasks/assignments/${assignmentId}`);
     return response.data;
+  },
+  async bulkAssignTask(assignmentData: { task_id: number, emp_ids: number[] }) {
+    const response = await api.post('/tasks/bulk-assign/', assignmentData);
+    return response.data;
   }
 };
 

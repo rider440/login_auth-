@@ -86,12 +86,12 @@ export default function EmployeeProfilePage() {
 
   const handleUnassignTask = async (taskId: number) => {
     if (!confirm("Are you sure you want to unassign this task?")) return;
-    
+
     try {
       // Find the assignment ID for this task and employee
       const assignments = await taskService.getTaskAssignments(taskId);
       const assignment = assignments.find((a: any) => a.emp_id === employeeId);
-      
+
       if (assignment) {
         await taskService.deleteTaskAssignment(assignment.TaskAssigneeId);
         fetchData();
@@ -146,9 +146,9 @@ export default function EmployeeProfilePage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: 'white', fontSize: '2rem', fontWeight: 'bold', margin: '0 auto 1rem'
             }}>
-              {employee.EmpName.charAt(0)}
+              {employee.FirstName.charAt(0)}
             </div>
-            <h2>{employee.EmpName}</h2>
+            <h2>{employee.FirstName} {employee.LastName}</h2>
             <span className={`badge ${employee.is_active ? 'badge-active' : 'badge-inactive'}`} style={{ marginTop: '0.5rem', display: 'inline-block' }}>
               {employee.is_active ? 'Active' : 'Inactive'}
             </span>
@@ -186,9 +186,7 @@ export default function EmployeeProfilePage() {
               <CheckSquare size={24} className="text-primary" />
               Assigned Tasks
             </h2>
-            <button onClick={() => setShowAssignModal(true)} className="btn-small" style={{ width: 'auto' }}>
-              <Plus size={18} /> Assign Task
-            </button>
+
           </div>
 
           {assignedTasks.length === 0 ? (
@@ -205,7 +203,7 @@ export default function EmployeeProfilePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                     <h3 style={{ fontSize: '1.1rem' }}>{task.TaskName}</h3>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <select 
+                      <select
                         value={task.status || "Pending"}
                         onChange={(e) => handleUpdateTaskStatus(task.TaskId, e.target.value)}
                         style={{
@@ -217,7 +215,7 @@ export default function EmployeeProfilePage() {
                         <option value="In Progress">In Progress</option>
                         <option value="Completed">Completed</option>
                       </select>
-                      <button 
+                      <button
                         onClick={() => handleUnassignTask(task.TaskId)}
                         style={{ padding: '0.25rem', background: 'transparent', boxShadow: 'none', color: '#ef4444', width: 'auto' }}
                         title="Unassign Task"
@@ -227,7 +225,7 @@ export default function EmployeeProfilePage() {
                     </div>
                   </div>
                   <p className="text-muted" style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>{task.description}</p>
-                  
+
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
                     <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)', borderRadius: '999px' }}>
                       Priority: {task.priority || "Normal"}
@@ -244,7 +242,7 @@ export default function EmployeeProfilePage() {
       {showAssignModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2 style={{ marginBottom: '1.5rem' }}>Assign Task to {employee.EmpName}</h2>
+            <h2 style={{ marginBottom: '1.5rem' }}>Assign Task to {employee.FirstName}</h2>
             <form onSubmit={handleAssignTask}>
               <div className="form-group">
                 <label>Select Task</label>

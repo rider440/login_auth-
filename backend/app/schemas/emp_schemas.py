@@ -3,7 +3,8 @@ from typing import Optional
 from datetime import datetime
 
 class EmployeeBase(BaseModel):
-    EmpName: str
+    FirstName: str
+    LastName: str
     Email: EmailStr
     Phone: str
     is_active: Optional[bool] = True
@@ -12,7 +13,8 @@ class EmployeeCreate(EmployeeBase):
     pass
 
 class EmployeeUpdate(BaseModel):
-    EmpName: Optional[str] = None
+    FirstName: Optional[str] = None
+    LastName: Optional[str] = None
     Email: Optional[EmailStr] = None
     Phone: Optional[str] = None
     is_active: Optional[bool] = None

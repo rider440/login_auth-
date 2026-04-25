@@ -30,7 +30,7 @@ export default function DashboardLayout({
       <aside className={`sidebar ${isMobileMenuOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <div className="logo-text">WorkSpace</div>
-          <button 
+          <button
             className="mobile-close"
             onClick={() => setIsMobileMenuOpen(false)}
           >
@@ -42,10 +42,10 @@ export default function DashboardLayout({
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/dashboard");
-            
+
             return (
-              <Link 
-                key={item.name} 
+              <Link
+                key={item.name}
                 href={item.href}
                 className={`nav-item ${isActive ? "active" : ""}`}
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -72,7 +72,7 @@ export default function DashboardLayout({
           <button onClick={() => setIsMobileMenuOpen(true)}>
             <Menu size={24} />
           </button>
-          <div className="logo-text" style={{fontSize: "1.2rem"}}>WorkSpace</div>
+          <div className="logo-text" style={{ fontSize: "1.2rem" }}>WorkSpace</div>
         </header>
 
         {/* Content */}

@@ -14,7 +14,8 @@ export default function EmployeesPage() {
 
   // Form state
   const [formData, setFormData] = useState({
-    EmpName: "",
+    FirstName: "",
+    LastName: "",
     Email: "",
     Phone: ""
   });
@@ -53,7 +54,8 @@ export default function EmployeesPage() {
   const handleEdit = (emp: any) => {
     setEditingId(emp.EmpId);
     setFormData({
-      EmpName: emp.EmpName,
+      FirstName: emp.FirstName,
+      LastName: emp.LastName,
       Email: emp.Email,
       Phone: emp.Phone
     });
@@ -74,7 +76,7 @@ export default function EmployeesPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ EmpName: "", Email: "", Phone: "" });
+    setFormData({ FirstName: "", LastName: "", Email: "", Phone: "" });
   };
 
   return (
@@ -120,7 +122,7 @@ export default function EmployeesPage() {
                 {employees.map((emp) => (
                   <tr key={emp.EmpId}>
                     <td>#{emp.EmpId}</td>
-                    <td>{emp.EmpName}</td>
+                    <td>{emp.FirstName} {emp.LastName}</td>
                     <td>{emp.Email || "N/A"}</td>
                     <td>{emp.Phone || "N/A"}</td>
                     <td>
@@ -165,12 +167,21 @@ export default function EmployeesPage() {
             <h2 style={{ marginBottom: '1.5rem' }}>{editingId ? 'Edit Employee' : 'Add New Employee'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Full Name</label>
+                <label>First Name</label>
                 <input
                   required
-                  placeholder="e.g. John Doe"
-                  value={formData.EmpName}
-                  onChange={(e) => setFormData({ ...formData, EmpName: e.target.value })}
+                  placeholder="e.g. John"
+                  value={formData.FirstName}
+                  onChange={(e) => setFormData({ ...formData, FirstName: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  required
+                  placeholder="e.g. Doe"
+                  value={formData.LastName}
+                  onChange={(e) => setFormData({ ...formData, LastName: e.target.value })}
                 />
               </div>
               <div className="form-group">

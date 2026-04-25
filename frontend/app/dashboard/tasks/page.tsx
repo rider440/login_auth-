@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { taskService } from "@/services/api";
-import { Loader2, Plus, CheckSquare, Edit, Trash2 } from "lucide-react";
+import { taskService, employeeService } from "@/services/api";
+import { Loader2, Plus, CheckSquare, Edit, Trash2, Users } from "lucide-react";
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -10,6 +10,11 @@ export default function TasksPage() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignTaskId, setAssignTaskId] = useState<number | null>(null);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [selectedEmpIds, setSelectedEmpIds] = useState<number[]>([]);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -31,8 +36,18 @@ export default function TasksPage() {
     }
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const data = await employeeService.getEmployees();
+      setEmployees(data);
+    } catch (err) {
+      console.error("Failed to load employees");
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
+    fetchEmployees();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +93,43 @@ export default function TasksPage() {
     setFormData({ TaskName: "", description: "", status: "Pending", priority: "Normal" });
   };
 
+  const handleOpenAssignModal = async (task: any) => {
+    setAssignTaskId(task.TaskId);
+    try {
+      const assignments = await taskService.getTaskAssignments(task.TaskId);
+      setSelectedEmpIds(assignments.map((a: any) => a.emp_id));
+      setShowAssignModal(true);
+    } catch (err) {
+      alert("Failed to load assignments");
+    }
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!assignTaskId) return;
+    try {
+      setIsAssigning(true);
+      await taskService.bulkAssignTask({
+        task_id: assignTaskId,
+        emp_ids: selectedEmpIds
+      });
+      setShowAssignModal(false);
+      setAssignTaskId(null);
+      setSelectedEmpIds([]);
+    } catch (err) {
+      alert("Failed to assign employees");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const toggleEmployeeSelection = (empId: number) => {
+    setSelectedEmpIds(prev =>
+      prev.includes(empId)
+        ? prev.filter(id => id !== empId)
+        : [...prev, empId]
+    );
+  };
+
   return (
     <div >
       <div className="page-header">
@@ -114,6 +166,7 @@ export default function TasksPage() {
                   <th>Description</th>
                   <th>Status</th>
                   <th>Priority</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -126,7 +179,7 @@ export default function TasksPage() {
                     </td>
                     <td>
                       <span className={`badge ${task.status === 'Completed' ? 'badge-active' :
-                          task.status === 'In Progress' ? 'badge-active' : 'badge-inactive'
+                        task.status === 'In Progress' ? 'badge-active' : 'badge-inactive'
                         }`}>
                         {task.status || "Pending"}
                       </span>
@@ -138,16 +191,24 @@ export default function TasksPage() {
                       </span>
                     </td>
                     <td style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button 
-                        className="action-btn btn-small" 
+                      <button
+                        className="action-btn btn-small"
+                        onClick={() => handleOpenAssignModal(task)}
+                        title="Assign Employees"
+                        style={{ color: 'var(--primary)' }}
+                      >
+                        <Users size={18} />
+                      </button>
+                      <button
+                        className="action-btn btn-small"
                         onClick={() => handleEdit(task)}
                         title="Edit Task"
                         style={{ color: 'var(--primary)' }}
                       >
                         <Edit size={18} />
                       </button>
-                      <button 
-                        className="action-btn btn-small" 
+                      <button
+                        className="action-btn btn-small"
                         onClick={() => handleDelete(task.TaskId)}
                         title="Delete Task"
                         style={{ color: '#ef4444' }}
@@ -240,6 +301,67 @@ export default function TasksPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showAssignModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
+            <h2 style={{ marginBottom: '1rem' }}>Assign Employees</h2>
+            <p className="subtitle" style={{ marginBottom: '1.5rem' }}>Select employees to assign to this task</p>
+
+            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1.5rem', border: '1px solid var(--card-border)', borderRadius: '0.75rem' }}>
+              {employees.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+                  No employees found
+                </div>
+              ) : (
+                employees.map(emp => (
+                  <div
+                    key={emp.EmpId}
+                    onClick={() => toggleEmployeeSelection(emp.EmpId)}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid var(--card-border)',
+                      background: selectedEmpIds.includes(emp.EmpId) ? 'rgba(var(--primary-rgb), 0.1)' : 'transparent'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedEmpIds.includes(emp.EmpId)}
+                      onChange={() => { }} // Handled by div click
+                      style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500 }}>{emp.FirstName} {emp.LastName}</div>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--muted)' }}>{emp.Email}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex" style={{ gap: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => { setShowAssignModal(false); setAssignTaskId(null); }}
+                style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--foreground)', boxShadow: 'none' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignSubmit}
+                disabled={isAssigning}
+                style={{ flex: 1 }}
+              >
+                {isAssigning ? <Loader2 className="animate-spin" size={20} /> : 'Save Assignments'}
+              </button>
+            </div>
           </div>
         </div>
       )}

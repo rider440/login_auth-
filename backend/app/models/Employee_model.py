@@ -7,7 +7,8 @@ class Employee(Base):
 
     EmpId = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("users.company_id"), nullable=False)
-    EmpName = Column(String, nullable=False)
+    FirstName = Column(String, nullable=False)
+    LastName = Column(String, nullable=False)
     Email = Column(String, unique=True, index=True, nullable=False)
     Phone = Column(String(10), unique=True, index=True, nullable=False)
     is_active = Column(Boolean, default=True)

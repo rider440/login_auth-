@@ -43,3 +43,7 @@ class TaskAssigneeOut(TaskAssigneeBase):
 
     class Config:
         from_attributes = True
+
+class TaskBulkAssign(BaseModel):
+    task_id: int
+    emp_ids: list[int]

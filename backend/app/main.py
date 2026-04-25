@@ -179,6 +179,13 @@ def assign_task(assign_data: task_schemas.TaskAssigneeCreate, current_user: user
         raise HTTPException(status_code=400, detail="Invalid task_id or emp_id for your company.")
     return db_assignee
 
+@app.post("/tasks/bulk-assign/", status_code=status.HTTP_200_OK)
+def bulk_assign_task(assign_data: task_schemas.TaskBulkAssign, current_user: user_schemas.UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
+    success = task_service.bulk_assign_task(db, assign_data, current_user.company_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to assign tasks. Verify task and employee IDs.")
+    return {"message": "Tasks assigned successfully"}
+
 @app.get("/tasks/{task_id}/assignments", response_model=List[task_schemas.TaskAssigneeOut])
 def get_task_assignments(task_id: int, current_user: user_schemas.UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
     return task_service.get_task_assignments(db, task_id, current_user.company_id)
