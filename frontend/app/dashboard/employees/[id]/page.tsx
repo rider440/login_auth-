@@ -186,7 +186,7 @@ export default function EmployeeProfilePage() {
               <CheckSquare size={24} className="text-primary" />
               Assigned Tasks
             </h2>
-
+            <h3 style={{ color: '#00ff2a', fontSize: '0.7rem', fontWeight: 'bold', border: '2px solid #7454f0', padding: '10px', borderRadius: '25px', boxShadow: 'yellowgreen' }}>Login Code:   {employee.Login_Code}</h3>
           </div>
 
           {assignedTasks.length === 0 ? (

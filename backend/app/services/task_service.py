@@ -124,3 +124,11 @@ def bulk_assign_task(db: Session, assign_data: TaskBulkAssign, company_id: int):
     
     db.commit()
     return True
+
+def get_tasks_by_employee(db: Session, emp_id: int, company_id: int):
+    # Get task IDs assigned to the employee
+    task_ids = db.query(task_assignee.task_id).filter(task_assignee.emp_id == emp_id).all()
+    task_ids = [tid[0] for tid in task_ids]
+    
+    # Return those tasks belonging to the same company
+    return db.query(task).filter(task.TaskId.in_(task_ids), task.company_id == company_id).all()

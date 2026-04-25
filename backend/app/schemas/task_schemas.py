@@ -14,6 +14,9 @@ class TaskCreate(TaskBase):
 
 class TaskUpdate(BaseModel):
     TaskName: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
     is_active: Optional[bool] = None
 
 class TaskOut(TaskBase):

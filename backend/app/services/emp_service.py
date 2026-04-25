@@ -41,3 +41,9 @@ def delete_employee(db: Session, emp_id: int, company_id: int):
     db.delete(db_emp)
     db.commit()
     return True
+
+def get_employee_by_phone(db: Session, phone: str):
+    return db.query(Employee).filter(Employee.Phone == phone).first()
+
+def verify_employee_login(db: Session, phone: str, login_code: str):
+    return db.query(Employee).filter(Employee.Phone == phone, Employee.Login_Code == login_code).first()

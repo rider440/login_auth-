@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { taskService, employeeService } from "@/services/api";
+import { taskService, employeeService, authService } from "@/services/api";
 import { Loader2, Plus, CheckSquare, Edit, Trash2, Users } from "lucide-react";
 
 export default function TasksPage() {
@@ -16,13 +16,20 @@ export default function TasksPage() {
   const [selectedEmpIds, setSelectedEmpIds] = useState<number[]>([]);
   const [isAssigning, setIsAssigning] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     TaskName: "",
     description: "",
     status: "Pending",
     priority: "Normal",
   });
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const fetchUser = async () => {
+    try {
+      const data = await authService.getCurrentUser();
+      setUserRole(data.role);
+    } catch (err) { }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -48,7 +55,17 @@ export default function TasksPage() {
   useEffect(() => {
     fetchTasks();
     fetchEmployees();
+    fetchUser();
   }, []);
+
+  const handleUpdateStatus = async (taskId: number, newStatus: string) => {
+    try {
+      await taskService.updateTask(taskId, { status: newStatus });
+      fetchTasks();
+    } catch (err) {
+      alert("Failed to update status");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,10 +156,12 @@ export default function TasksPage() {
           </h1>
           <p className="subtitle" style={{ marginBottom: 0 }}>Manage your company's tasks</p>
         </div>
-        <button onClick={() => setShowModal(true)} style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
-          <Plus size={20} />
-          Create Task
-        </button>
+        {userRole === 'admin' && (
+          <button onClick={() => setShowModal(true)} style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
+            <Plus size={20} />
+            Create Task
+          </button>
+        )}
       </div>
 
       <div className="glass-card" style={{ maxWidth: '100%', padding: '1.5rem' }}>
@@ -191,30 +210,51 @@ export default function TasksPage() {
                       </span>
                     </td>
                     <td style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        className="action-btn btn-small"
-                        onClick={() => handleOpenAssignModal(task)}
-                        title="Assign Employees"
-                        style={{ color: 'var(--primary)' }}
-                      >
-                        <Users size={18} />
-                      </button>
-                      <button
-                        className="action-btn btn-small"
-                        onClick={() => handleEdit(task)}
-                        title="Edit Task"
-                        style={{ color: 'var(--primary)' }}
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        className="action-btn btn-small"
-                        onClick={() => handleDelete(task.TaskId)}
-                        title="Delete Task"
-                        style={{ color: '#ef4444' }}
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {userRole === 'admin' ? (
+                        <>
+                          <button
+                            className="action-btn btn-small"
+                            onClick={() => handleOpenAssignModal(task)}
+                            title="Assign Employees"
+                            style={{ color: 'var(--primary)' }}
+                          >
+                            <Users size={18} />
+                          </button>
+                          <button
+                            className="action-btn btn-small"
+                            onClick={() => handleEdit(task)}
+                            title="Edit Task"
+                            style={{ color: 'var(--primary)' }}
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            className="action-btn btn-small"
+                            onClick={() => handleDelete(task.TaskId)}
+                            title="Delete Task"
+                            style={{ color: '#ef4444' }}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      ) : (
+                        <select 
+                          value={task.status}
+                          onChange={(e) => handleUpdateStatus(task.TaskId, e.target.value)}
+                          style={{ 
+                            padding: '0.25rem 0.5rem', 
+                            borderRadius: '0.5rem',
+                            border: '1px solid var(--card-border)',
+                            fontSize: '0.875rem',
+                            background: 'var(--input-bg)',
+                            color: 'var(--foreground)'
+                          }}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      )}
                     </td>
                   </tr>
                 ))}

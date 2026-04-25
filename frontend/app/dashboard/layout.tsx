@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, CheckSquare, LogOut, Menu, X } from "lucide-react";
+import { authService } from "@/services/api";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,19 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await authService.getCurrentUser();
+        setUserRole(data.role);
+      } catch (err) {
+        // Unauthorized handled in api.ts
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -20,7 +34,7 @@ export default function DashboardLayout({
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Employees", href: "/dashboard/employees", icon: Users },
+    { name: "Employees", href: "/dashboard/employees", icon: Users, adminOnly: true },
     { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare },
   ];
 
@@ -39,22 +53,24 @@ export default function DashboardLayout({
         </div>
 
         <nav className="sidebar-nav">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/dashboard");
+          {menuItems
+            .filter(item => !item.adminOnly || userRole === "admin")
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/dashboard");
 
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`nav-item ${isActive ? "active" : ""}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Icon size={20} />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`nav-item ${isActive ? "active" : ""}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Icon size={20} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
         </nav>
 
         <div className="sidebar-footer">

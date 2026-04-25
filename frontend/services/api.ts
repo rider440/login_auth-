@@ -44,6 +44,11 @@ export const authService = {
     return response.data;
   },
 
+  async checkPhone(phone: string) {
+    const response = await api.post('/auth/check-phone', { phone });
+    return response.data;
+  },
+
   async sendOtp(phone: string) {
     const response = await api.post('/send-otp', { phone });
     return response.data;
@@ -51,6 +56,14 @@ export const authService = {
 
   async verifyOtp(phone: string, otp: string) {
     const response = await api.post('/verify-otp', { phone, otp });
+    return response.data;
+  },
+
+  async employeeLogin(phone: string, loginCode: string) {
+    const response = await api.post('/auth/employee-login', { 
+      phone, 
+      login_code: loginCode 
+    });
     return response.data;
   },
 

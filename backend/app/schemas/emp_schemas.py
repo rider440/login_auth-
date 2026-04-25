@@ -5,8 +5,7 @@ from datetime import datetime
 class EmployeeBase(BaseModel):
     FirstName: str
     LastName: str
-    Email: EmailStr
-    Login_Code: str
+    Email: EmailStr    
     Phone: str
     is_active: Optional[bool] = True
 
@@ -23,6 +22,7 @@ class EmployeeUpdate(BaseModel):
 class EmployeeOut(EmployeeBase):
     EmpId: int
     company_id: int
+    Login_Code: str
     created_at: datetime
 
     class Config:
