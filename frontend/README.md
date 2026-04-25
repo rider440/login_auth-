@@ -1,5 +1,8 @@
 # Modern Auth UI - Next.js
 
+> [!IMPORTANT]
+> **Looking for the full project documentation?** Check out the [PROJECT_GUIDE.md](../PROJECT_GUIDE.md) in the root directory for a complete overview of both Backend and Frontend.
+
 A premium Login and Registration system built with Next.js and Vanilla CSS.
 
 ## 🚀 Features
