@@ -1,9 +1,15 @@
 from sqlalchemy.orm import Session
+import random
+import string
 from app.models.Employee_model import Employee
 from app.schemas.emp_schemas import EmployeeCreate, EmployeeUpdate
 
 def create_employee(db: Session, emp: EmployeeCreate, company_id: int):
-    db_emp = Employee(**emp.model_dump(), company_id=company_id)
+    login_code = "Emp" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    while db.query(Employee).filter(Employee.Login_Code == login_code).first():
+        login_code = "Emp" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+
+    db_emp = Employee(**emp.model_dump(), company_id=company_id, Login_Code=login_code)
     db.add(db_emp)
     db.commit()
     db.refresh(db_emp)

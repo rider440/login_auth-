@@ -6,6 +6,7 @@ class EmployeeBase(BaseModel):
     FirstName: str
     LastName: str
     Email: EmailStr
+    Login_Code: str
     Phone: str
     is_active: Optional[bool] = True
 
