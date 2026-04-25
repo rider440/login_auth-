@@ -56,7 +56,12 @@ def send_otp(request: otp_schemas.SendOTPRequest, db: Session = Depends(get_db))
             detail="Phone number not registered. Please register first.",
         )
     otp = otp_service.generate_otp()
-    otp_service.save_otp(db, request.phone, otp)
+    result = otp_service.save_otp(db, request.phone, otp)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Too many attempts. Your account is blocked for 24 hours.",
+        )
     print(f"[DEV] OTP for {request.phone}: {otp}")
     return otp_schemas.OTPResponse(message="OTP sent successfully", otp=otp)
 
@@ -64,11 +69,12 @@ def send_otp(request: otp_schemas.SendOTPRequest, db: Session = Depends(get_db))
 # ─── Verify OTP / Login (JSON Client) ─────────────────────────────────────────
 @app.post("/verify-otp", response_model=token_schemas.Token)
 def verify_otp(request: otp_schemas.VerifyOTPRequest, db: Session = Depends(get_db)):
-    valid = otp_service.verify_otp(db, request.phone, request.otp)
-    if not valid:
+    result = otp_service.verify_otp(db, request.phone, request.otp)
+    if not result["success"]:
+        status_code = status.HTTP_403_FORBIDDEN if result["is_blocked"] else status.HTTP_401_UNAUTHORIZED
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired OTP",
+            status_code=status_code,
+            detail=result["message"],
         )
     access_token = auth.create_access_token(data={"sub": request.phone})
     return token_schemas.Token(access_token=access_token, token_type="bearer")
@@ -79,11 +85,12 @@ def verify_otp(request: otp_schemas.VerifyOTPRequest, db: Session = Depends(get_
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     # Swagger uses username/password form fields. We map username -> phone, password -> otp
     print(f"[DEV] /token received username: '{form_data.username}' password: '{form_data.password}'")
-    valid = otp_service.verify_otp(db, form_data.username, form_data.password)
-    if not valid:
+    result = otp_service.verify_otp(db, form_data.username, form_data.password)
+    if not result["success"]:
+        status_code = status.HTTP_403_FORBIDDEN if result["is_blocked"] else status.HTTP_401_UNAUTHORIZED
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired OTP",
+            status_code=status_code,
+            detail=result["message"],
         )
     access_token = auth.create_access_token(data={"sub": form_data.username})
     return token_schemas.Token(access_token=access_token, token_type="bearer")

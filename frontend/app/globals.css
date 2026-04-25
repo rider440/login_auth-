@@ -65,8 +65,12 @@ main {
   box-shadow: var(--glass-shadow);
   padding: 2.5rem;
   width: 100%;
-  max-width: 100%;
+  max-width: 450px;
   animation: fadeIn 0.6s ease-out;
+}
+
+.content-container .glass-card {
+  max-width: 100% !important;
 }
 
 h1 {
