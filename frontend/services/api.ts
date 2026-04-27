@@ -97,8 +97,8 @@ export const employeeService = {
 };
 
 export const taskService = {
-  async getTasks() {
-    const response = await api.get('/tasks/');
+  async getTasks(params?: { project_id?: number, team_id?: number }) {
+    const response = await api.get('/tasks/', { params });
     return response.data;
   },
   async getTask(id: number) {
@@ -131,6 +131,63 @@ export const taskService = {
   },
   async bulkAssignTask(assignmentData: { task_id: number, emp_ids: number[] }) {
     const response = await api.post('/tasks/bulk-assign/', assignmentData);
+    return response.data;
+  }
+};
+
+export const projectService = {
+  async getProjects() {
+    const response = await api.get('/projects/');
+    return response.data;
+  },
+  async getProject(id: number) {
+    const response = await api.get(`/projects/${id}`);
+    return response.data;
+  },
+  async createProject(projectData: any) {
+    const response = await api.post('/projects/', projectData);
+    return response.data;
+  },
+  async updateProject(id: number, projectData: any) {
+    const response = await api.put(`/projects/${id}`, projectData);
+    return response.data;
+  },
+  async deleteProject(id: number) {
+    const response = await api.delete(`/projects/${id}`);
+    return response.data;
+  }
+};
+
+export const teamService = {
+  async getTeams(params?: { project_id?: number }) {
+    const response = await api.get('/teams/', { params });
+    return response.data;
+  },
+  async getTeam(id: number) {
+    const response = await api.get(`/teams/${id}`);
+    return response.data;
+  },
+  async createTeam(teamData: any) {
+    const response = await api.post('/teams/', teamData);
+    return response.data;
+  },
+  async updateTeam(id: number, teamData: any) {
+    const response = await api.put(`/teams/${id}`, teamData);
+    return response.data;
+  },
+  async deleteTeam(id: number) {
+    const response = await api.delete(`/teams/${id}`);
+    return response.data;
+  }
+};
+
+export const reportService = {
+  async createReport(reportData: { task_id: number, UpdateContent: string, Status: string }) {
+    const response = await api.post('/reports/', reportData);
+    return response.data;
+  },
+  async getReports(params?: { emp_id?: number, task_id?: number }) {
+    const response = await api.get('/reports/', { params });
     return response.data;
   }
 };

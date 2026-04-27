@@ -7,6 +7,8 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = "Pending"
     priority: Optional[str] = "Normal"
+    project_id: Optional[int] = None
+    team_id: Optional[int] = None
     is_active: Optional[bool] = True
 
 class TaskCreate(TaskBase):
@@ -17,6 +19,8 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
+    project_id: Optional[int] = None
+    team_id: Optional[int] = None
     is_active: Optional[bool] = None
 
 class TaskOut(TaskBase):
@@ -50,3 +54,22 @@ class TaskAssigneeOut(TaskAssigneeBase):
 class TaskBulkAssign(BaseModel):
     task_id: int
     emp_ids: list[int]
+
+# Daily Report Schemas
+class DailyReportBase(BaseModel):
+    task_id: int
+    UpdateContent: str
+    Status: str
+
+class DailyReportCreate(DailyReportBase):
+    pass
+
+class DailyReportOut(DailyReportBase):
+    ReportId: int
+    emp_id: int
+    company_id: int
+    ReportDate: datetime
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

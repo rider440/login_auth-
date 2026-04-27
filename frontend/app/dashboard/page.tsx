@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { authService, taskService } from "@/services/api";
-import { User, Phone, MapPin, Building, Loader2, CheckSquare } from "lucide-react";
+import { authService, taskService, reportService } from "@/services/api";
+import { User, Phone, MapPin, Building, Loader2, CheckSquare, History, FileText } from "lucide-react";
 
 interface UserData {
   id: number;
@@ -20,16 +20,21 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [recentReports, setRecentReports] = useState<any[]>([]);
+
   const fetchData = async () => {
     try {
       setIsLoading(true);
       const userData = await authService.getCurrentUser();
       setUser(userData);
 
-      if (userData.role === "employee") {
-        const taskData = await taskService.getTasks();
-        setTasks(taskData);
-      }
+      const [taskData, reportData] = await Promise.all([
+        userData.role === "employee" ? taskService.getTasks() : Promise.resolve([]),
+        reportService.getReports()
+      ]);
+      
+      setTasks(taskData);
+      setRecentReports(reportData.slice(0, 5)); // Only show last 5 reports
     } catch (err: any) {
       setError("Failed to load data. Please login again.");
       if (err.response?.status === 401) {
@@ -82,7 +87,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: user.role === 'admin' ? '1fr' : '1fr 2fr', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
         {/* Profile Card */}
         <div className="glass-card" style={{ height: 'fit-content' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>My Profile</h2>
@@ -133,60 +138,76 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Employee Task List */}
-        {user.role === 'employee' && (
-          <div className="glass-card">
+        {/* Reports & Tasks Container */}
+        <div className="flex flex-col gap-8">
+          {/* Recent Activity (Reports) */}
+          <div className="glass-card" style={{ maxWidth: '100%' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <CheckSquare size={24} /> My Assigned Tasks
+              <History size={24} /> Recent Activity
             </h2>
-            
-            {tasks.length === 0 ? (
-              <p className="text-muted">No tasks assigned to you yet.</p>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Task</th>
-                      <th>Status</th>
-                      <th>Priority</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map(task => (
-                      <tr key={task.TaskId}>
-                        <td style={{ fontWeight: 500 }}>{task.TaskName}</td>
-                        <td>
-                          <span className={`badge ${task.status === 'Completed' ? 'badge-active' : 'badge-inactive'}`}>
-                            {task.status}
-                          </span>
-                        </td>
-                        <td>{task.priority}</td>
-                        <td>
-                          <select 
-                            value={task.status}
-                            onChange={(e) => handleUpdateStatus(task.TaskId, e.target.value)}
-                            style={{ 
-                              padding: '0.25rem 0.5rem', 
-                              borderRadius: '0.5rem',
-                              border: '1px solid var(--card-border)',
-                              fontSize: '0.875rem'
-                            }}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {recentReports.length > 0 ? (
+              <div className="history-list">
+                {recentReports.map((report: any) => (
+                  <div key={report.ReportId} className="history-item">
+                    <div className="flex justify-between items-start">
+                      <span className="date">{new Date(report.created_at).toLocaleString()}</span>
+                      <span className={`badge ${report.Status === 'Completed' ? 'badge-active' : 'badge-pending'}`} style={{ fontSize: '0.6rem' }}>
+                        {report.Status}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      <strong>Update:</strong> {report.UpdateContent}
+                    </p>
+                  </div>
+                ))}
               </div>
+            ) : (
+              <p className="text-muted">No recent updates logged.</p>
             )}
           </div>
-        )}
+
+          {/* Employee Task List */}
+          {user.role === 'employee' && (
+            <div className="glass-card" style={{ maxWidth: '100%' }}>
+              <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckSquare size={24} /> My Assigned Tasks
+              </h2>
+              
+              {tasks.length === 0 ? (
+                <p className="text-muted">No tasks assigned to you yet.</p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.map(task => (
+                        <tr key={task.TaskId}>
+                          <td style={{ fontWeight: 500 }}>{task.TaskName}</td>
+                          <td>
+                            <span className={`badge ${task.status === 'Completed' ? 'badge-active' : 'badge-pending'}`}>
+                              {task.status}
+                            </span>
+                          </td>
+                          <td>
+                            <button className="btn-small" onClick={() => window.location.href = "/dashboard/tasks"}>
+                               <FileText size={16} /> View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

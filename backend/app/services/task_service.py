@@ -10,8 +10,13 @@ def create_task(db: Session, task_data: TaskCreate, company_id: int):
     db.refresh(db_task)
     return db_task
 
-def get_tasks(db: Session, company_id: int, skip: int = 0, limit: int = 100):
-    return db.query(task).filter(task.company_id == company_id).offset(skip).limit(limit).all()
+def get_tasks(db: Session, company_id: int, project_id: int = None, team_id: int = None, skip: int = 0, limit: int = 100):
+    query = db.query(task).filter(task.company_id == company_id)
+    if project_id:
+        query = query.filter(task.project_id == project_id)
+    if team_id:
+        query = query.filter(task.team_id == team_id)
+    return query.offset(skip).limit(limit).all()
 
 def get_task(db: Session, task_id: int, company_id: int):
     return db.query(task).filter(task.TaskId == task_id, task.company_id == company_id).first()

@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import engine, get_db, Base
 from app import models, auth
 from typing import List
-from app.schemas import emp_schemas, task_schemas, user_schemas, otp_schemas, token_schemas
-from app.services import emp_service, task_service, user_service, otp_service
+from app.schemas import emp_schemas, task_schemas, user_schemas, otp_schemas, token_schemas, project_schemas, team_schemas
+from app.services import emp_service, task_service, user_service, otp_service, project_service, team_service, report_service
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
@@ -158,7 +158,8 @@ def get_me(current_user = Depends(get_current_user)):
             "name": f"{current_user.FirstName} {current_user.LastName}",
             "phone": current_user.Phone,
             "company_id": current_user.company_id,
-            "role": "employee"
+            "role": "employee",
+            "login_code": current_user.Login_Code
         }
     return {
         "id": current_user.company_id,
@@ -221,11 +222,11 @@ def create_task(task: task_schemas.TaskCreate, current_user = Depends(require_ad
     return task_service.create_task(db, task, current_user.company_id)
 
 @app.get("/tasks/", response_model=List[task_schemas.TaskOut])
-def read_tasks(skip: int = 0, limit: int = 100, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def read_tasks(project_id: int = None, team_id: int = None, skip: int = 0, limit: int = 100, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.role == "employee":
         # Employees only see tasks assigned to them
         return task_service.get_tasks_by_employee(db, current_user.EmpId, current_user.company_id)
-    return task_service.get_tasks(db, current_user.company_id, skip=skip, limit=limit)
+    return task_service.get_tasks(db, current_user.company_id, project_id=project_id, team_id=team_id, skip=skip, limit=limit)
 
 @app.get("/tasks/{task_id}", response_model=task_schemas.TaskOut)
 def read_task(task_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -299,3 +300,83 @@ def delete_task_assignment(assignment_id: int, current_user: user_schemas.UserRe
     if not success:
         raise HTTPException(status_code=404, detail="Task assignment not found")
     return {"message": "Task assignment deleted successfully"}
+
+
+# ─── Projects ─────────────────────────────────────────────────────────────────
+
+@app.post("/projects/", response_model=project_schemas.ProjectOut, status_code=status.HTTP_201_CREATED)
+def create_project(project: project_schemas.ProjectCreate, current_user = Depends(require_admin), db: Session = Depends(get_db)):
+    return project_service.create_project(db, project, current_user.company_id)
+
+@app.get("/projects/", response_model=List[project_schemas.ProjectOut])
+def read_projects(skip: int = 0, limit: int = 100, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return project_service.get_projects(db, current_user.company_id, skip=skip, limit=limit)
+
+@app.get("/projects/{project_id}", response_model=project_schemas.ProjectOut)
+def read_project(project_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    db_project = project_service.get_project(db, project_id, current_user.company_id)
+    if db_project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return db_project
+
+@app.put("/projects/{project_id}", response_model=project_schemas.ProjectOut)
+def update_project(project_id: int, project: project_schemas.ProjectUpdate, current_user = Depends(require_admin), db: Session = Depends(get_db)):
+    db_project = project_service.update_project(db, project_id, project, current_user.company_id)
+    if db_project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return db_project
+
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: int, current_user = Depends(require_admin), db: Session = Depends(get_db)):
+    success = project_service.delete_project(db, project_id, current_user.company_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"message": "Project deleted successfully"}
+
+
+# ─── Teams ────────────────────────────────────────────────────────────────────
+
+@app.post("/teams/", response_model=team_schemas.TeamOut, status_code=status.HTTP_201_CREATED)
+def create_team(team: team_schemas.TeamCreate, current_user = Depends(require_admin), db: Session = Depends(get_db)):
+    return team_service.create_team(db, team, current_user.company_id)
+
+@app.get("/teams/", response_model=List[team_schemas.TeamOut])
+def read_teams(project_id: int = None, skip: int = 0, limit: int = 100, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return team_service.get_teams(db, current_user.company_id, project_id=project_id, skip=skip, limit=limit)
+
+@app.get("/teams/{team_id}", response_model=team_schemas.TeamOut)
+def read_team(team_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    db_team = team_service.get_team(db, team_id, current_user.company_id)
+    if db_team is None:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return db_team
+
+@app.put("/teams/{team_id}", response_model=team_schemas.TeamOut)
+def update_team(team_id: int, team: team_schemas.TeamUpdate, current_user = Depends(require_admin), db: Session = Depends(get_db)):
+    db_team = team_service.update_team(db, team_id, team, current_user.company_id)
+    if db_team is None:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return db_team
+
+@app.delete("/teams/{team_id}")
+def delete_team(team_id: int, current_user = Depends(require_admin), db: Session = Depends(get_db)):
+    success = team_service.delete_team(db, team_id, current_user.company_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return {"message": "Team deleted successfully"}
+
+
+# ─── Daily Reports ────────────────────────────────────────────────────────────
+
+@app.post("/reports/", response_model=task_schemas.DailyReportOut, status_code=status.HTTP_201_CREATED)
+def create_report(report: task_schemas.DailyReportCreate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role != "employee":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only employees can create daily reports")
+    return report_service.create_report(db, report, current_user.EmpId, current_user.company_id)
+
+@app.get("/reports/", response_model=List[task_schemas.DailyReportOut])
+def read_reports(emp_id: int = None, task_id: int = None, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Employees can only see their own reports
+    if current_user.role == "employee":
+        emp_id = current_user.EmpId
+    return report_service.get_reports(db, current_user.company_id, emp_id=emp_id, task_id=task_id)

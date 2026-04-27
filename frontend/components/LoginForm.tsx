@@ -57,7 +57,7 @@ export default function LoginForm() {
     setOtp(newOtp);
 
     if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
+      setTimeout(() => otpRefs.current[index + 1]?.focus(), 10);
     }
   };
 

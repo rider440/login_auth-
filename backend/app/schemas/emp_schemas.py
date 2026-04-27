@@ -7,6 +7,7 @@ class EmployeeBase(BaseModel):
     LastName: str
     Email: EmailStr    
     Phone: str
+    Role: Optional[str] = "employee"
     is_active: Optional[bool] = True
 
 class EmployeeCreate(EmployeeBase):
@@ -17,6 +18,7 @@ class EmployeeUpdate(BaseModel):
     LastName: Optional[str] = None
     Email: Optional[EmailStr] = None
     Phone: Optional[str] = None
+    Role: Optional[str] = None
     is_active: Optional[bool] = None
         
 class EmployeeOut(EmployeeBase):

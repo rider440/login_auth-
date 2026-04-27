@@ -10,6 +10,8 @@ class task(Base):
 
     TaskId = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("users.company_id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.ProjectId", ondelete="CASCADE"), nullable=True)
+    team_id = Column(Integer, ForeignKey("teams.TeamId", ondelete="SET NULL"), nullable=True)
     TaskName = Column(String, nullable=False)
     description = Column(String, nullable=True)
     status = Column(String, nullable=True, default="Pending")
