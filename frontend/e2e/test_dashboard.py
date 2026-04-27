@@ -1,4 +1,4 @@
-import pytest
+from e2e.conftest import E2E_ADMIN_NAME, E2E_ADMIN_PHONE
 
 def test_dashboard_content_as_admin(authenticated_page, dashboard_page):
     """
@@ -9,8 +9,10 @@ def test_dashboard_content_as_admin(authenticated_page, dashboard_page):
     assert "Admin Dashboard" in dashboard_page.get_role_title()
     
     # Check if profile card contains admin info
-    assert "Admin User" in dashboard_page.profile_card.text_content()
-    assert "9999999999" in dashboard_page.profile_card.text_content()
+    dashboard_page.profile_card.wait_for(state="visible", timeout=5000)
+    content = dashboard_page.profile_card.text_content()
+    assert E2E_ADMIN_NAME in content
+    assert E2E_ADMIN_PHONE in content
 
 def test_navigation_to_employees(authenticated_page, page):
     """

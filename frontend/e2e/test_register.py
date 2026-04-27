@@ -13,10 +13,10 @@ def test_registration_flow(register_page, login_page, page):
     
     # Fill registration form
     register_page.register(
-        name="Test Company E2E",
+        name="Test Company E2E 21",
         phone=unique_phone,
-        address="123 Test St",
-        city="Test City"
+        address="123 Test St 2",
+        city="Test City 2"
     )
     
     # Check if redirected to login

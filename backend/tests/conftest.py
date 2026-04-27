@@ -1,4 +1,6 @@
+import uuid
 import pytest
+from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -7,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.database import Base, get_db
 
-# Use an in-memory SQLite database for testing
+# ─── In-Memory SQLite for Isolated Tests ──────────────────────────────────────
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
@@ -17,46 +19,61 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
+# ─── Fixtures ─────────────────────────────────────────────────────────────────
+
+@pytest.fixture(scope="function")
+def faker():
+    """Fresh Faker instance per test to avoid unique-value conflicts."""
+    return Faker()
+
+
+def unique_phone():
+    """Generate a truly unique 10-digit phone using UUID to avoid any collision."""
+    return str(uuid.uuid4().int)[:10]
+
+
 @pytest.fixture(scope="function")
 def db():
-    # Create the database tables
+    """Creates fresh tables before each test and drops them after."""
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-        # Drop the database tables
         Base.metadata.drop_all(bind=engine)
+
 
 @pytest.fixture(scope="function")
 def client(db):
+    """FastAPI TestClient wired to the in-memory test database."""
     def override_get_db():
         try:
             yield db
         finally:
             pass
-    
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
 
+
 @pytest.fixture(scope="function")
 def admin_token(client):
-    # Register a user
-    user_data = {"phone": "9999999999", "name": "Admin User"}
-    client.post("/register", json=user_data)
-    
-    # Login (simulate OTP verification)
-    # Since we are using a test DB, we can just call the service to create a token or use the endpoint if we can bypass OTP
-    # Actually, let's use the verify-otp logic if possible, or just mock the auth
+    """Register a fresh admin user with a unique phone per test, return JWT."""
+    phone = unique_phone()
+    client.post("/register", json={"phone": phone, "name": "Test Admin Co."})
+
     from app.auth import create_access_token
-    token = create_access_token(data={"sub": "9999999999", "role": "admin"})
+    token = create_access_token(data={"sub": phone, "role": "admin"})
     return token
+
 
 @pytest.fixture(scope="function")
 def auth_client(client, admin_token):
+    """Authenticated TestClient with admin Bearer token."""
     client.headers = {
         **client.headers,
         "Authorization": f"Bearer {admin_token}"

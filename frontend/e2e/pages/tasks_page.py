@@ -25,4 +25,12 @@ class TasksPage(BasePage):
         self.save_button.click()
 
     def get_task_count(self):
+        # Wait for any loading spinner to disappear
+        self.page.wait_for_selector(".animate-spin", state="hidden", timeout=10000)
+        
+        # If the table isn't there, it might be the empty state (count 0)
+        if self.table.count() == 0:
+            return 0
+            
+        self.table.wait_for(state="visible", timeout=5000)
         return self.table.locator("tbody tr").count()

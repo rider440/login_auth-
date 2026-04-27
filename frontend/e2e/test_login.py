@@ -1,56 +1,58 @@
-import pytest
-import re
+from e2e.conftest import E2E_ADMIN_PHONE, E2E_ADMIN_NAME, E2E_ADMIN_ADDR, E2E_ADMIN_CITY
+
 
 def test_admin_login_flow(login_page, register_page, dashboard_page, page):
     """
-    Test the full admin login flow including OTP interception.
+    Full admin login flow: register (idempotent) → OTP intercept → dashboard verify.
     """
-    phone = "9999999999"
-    
-    # 1. Ensure user is registered
+    # 1. Accept any success alert from registration
+    page.on("dialog", lambda d: d.accept())
+
+    # 2. Try to register — silently skip if phone already exists
     register_page.navigate("/register")
-    register_page.register("Admin User", phone, "123 Admin St", "Admin City")
-    page.wait_for_timeout(1000)
+    try:
+        register_page.register(E2E_ADMIN_NAME, E2E_ADMIN_PHONE,
+                               E2E_ADMIN_ADDR, E2E_ADMIN_CITY)
+        page.wait_for_timeout(1500)
+    except Exception:
+        pass  # already registered — that's fine
 
-    # 2. Navigate to login
-    login_page.navigate("/login")
-    
-    # 2. Enter registered phone number (using the one from our backend tests if it exists)
-    # For E2E, we might need to register first or use a known seed.
-    phone = "9999999999"
-    
-    # Listen for the OTP response
+    # 3. Intercept the OTP from the /send-otp response
     otp = None
-    def handle_response(response):
-        nonlocal otp
-        if "/send-otp" in response.url and response.status == 200:
-            data = response.json()
-            otp = data.get("otp")
 
-    page.on("response", handle_response)
-    
-    login_page.login_step_1(phone)
-    
-    # Wait for step 2 (OTP)
-    page.wait_for_selector(".otp-digit")
-    
-    assert otp is not None, "OTP was not captured from response"
-    
-    # 3. Enter OTP
+    def capture_otp(response):
+        nonlocal otp
+        try:
+            if "/send-otp" in response.url and response.status == 200:
+                otp = response.json().get("otp")
+        except Exception:
+            pass
+
+    page.on("response", capture_otp)
+
+    # 4. Navigate to login and enter phone
+    login_page.navigate("/login")
+    login_page.login_step_1(E2E_ADMIN_PHONE)
+
+    # 5. Wait for OTP input screen
+    page.wait_for_selector(".otp-digit", timeout=8000)
+    assert otp is not None, "OTP was not captured from the /send-otp response"
+
+    # 6. Enter OTP
     login_page.enter_otp(otp)
-    
-    # 4. Verify redirect to dashboard
+
+    # 7. Verify redirect to dashboard
     page.wait_for_url("**/dashboard", timeout=10000)
     assert dashboard_page.is_visible()
     assert "Admin Dashboard" in dashboard_page.get_role_title()
 
+
 def test_invalid_login_shows_error(login_page, page):
     """
-    Test that entering an unregistered phone number shows an error.
+    An unregistered phone number should show 'not registered' error.
     """
     login_page.navigate("/login")
-    login_page.login_step_1("0000000000") # Unregistered
-    
-    # Wait for error message
-    login_page.error_message.wait_for(state="visible")
+    login_page.login_step_1("0000000000")  # definitely not registered
+
+    login_page.error_message.wait_for(state="visible", timeout=5000)
     assert "not registered" in login_page.error_message.text_content()

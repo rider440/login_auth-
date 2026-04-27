@@ -1,3 +1,4 @@
+import time
 import pytest
 from playwright.sync_api import sync_playwright
 from e2e.pages.login_page import LoginPage
@@ -7,19 +8,37 @@ from e2e.pages.employees_page import EmployeesPage
 from e2e.pages.tasks_page import TasksPage
 from e2e.pages.profile_page import ProfilePage
 
-@pytest.fixture(scope="session")
+# ─── Fixed admin credentials for E2E session ──────────────────────────────────
+# We use a known phone. The fixture handles the case where it's already registered.
+E2E_ADMIN_PHONE = "7000000001"
+E2E_ADMIN_NAME  = "E2E Admin Corp"
+E2E_ADMIN_ADDR  = "1 Test Lane"
+E2E_ADMIN_CITY  = "Testville"
+
+
+# ─── Browser / Page fixtures ───────────────────────────────────────────────────
+
+@pytest.fixture(scope="function")
 def browser_context():
+    """Fresh browser context for every single test to ensure total isolation."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        # Use headless=True for stability, but we can switch to False for debugging
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context(base_url="http://localhost:3000")
         yield context
+        context.close()
         browser.close()
 
-@pytest.fixture
+
+@pytest.fixture(scope="function")
 def page(browser_context):
-    page = browser_context.new_page()
-    yield page
-    page.close()
+    """Fresh page per test."""
+    pg = browser_context.new_page()
+    yield pg
+    # pg.close() is handled by context.close()
+
+
+# ─── Page-Object fixtures ─────────────────────────────────────────────────────
 
 @pytest.fixture
 def login_page(page):
@@ -45,41 +64,54 @@ def tasks_page(page):
 def profile_page(page):
     return ProfilePage(page)
 
-@pytest.fixture
-def authenticated_page(page, login_page, register_page):
-    """
-    Returns a page that is already logged in as admin.
-    Ensures the test user is registered first.
-    """
-    phone = "9999999999"
-    
-    # 1. Try to register (it's okay if it fails because user already exists)
-    register_page.navigate("/register")
-    register_page.register("Admin User", phone, "123 Admin St", "Admin City")
-    
-    # Wait a bit or check for success/error
-    page.wait_for_timeout(1000) 
-    
-    # 2. Login
-    otp = None
-    def handle_response(response):
-        nonlocal otp
-        if "/send-otp" in response.url and response.status == 200:
-            otp = response.json().get("otp")
 
-    page.on("response", handle_response)
-    
-    login_page.navigate("/login")
-    login_page.login_step_1(phone)
-    
-    # Wait for OTP step
+# ─── Authenticated page fixture ────────────────────────────────────────────────
+
+@pytest.fixture
+def authenticated_page(page, login_page, register_page, dashboard_page):
+    """
+    Returns a page already logged in as admin.
+
+    """
+    # Step 1 – Ensure user is registered (idempotent)
+    page.on("dialog", lambda d: d.accept())
+    register_page.navigate("/register")
     try:
-        page.wait_for_selector(".otp-digit", timeout=5000)
+        register_page.register(E2E_ADMIN_NAME, E2E_ADMIN_PHONE,
+                               E2E_ADMIN_ADDR, E2E_ADMIN_CITY)
+        # Give it a moment to process (success or "already exists")
+        page.wait_for_timeout(2000)
+    except Exception:
+        pass
+
+    # Step 2 – Login with OTP interception
+    otp = None
+    def capture_otp(response):
+        nonlocal otp
+        try:
+            if "/send-otp" in response.url and response.status == 200:
+                otp = response.json().get("otp")
+        except Exception: pass
+
+    page.on("response", capture_otp)
+    login_page.navigate("/login")
+    login_page.login_step_1(E2E_ADMIN_PHONE)
+
+    # Wait for OTP step or dashboard (if already logged in)
+    try:
+        page.wait_for_selector(".otp-digit", timeout=10000)
         if otp:
             login_page.enter_otp(otp)
-            page.wait_for_url("**/dashboard", timeout=5000)
+        else:
+            # Maybe OTP was already sent or there's a delay, wait a bit more
+            page.wait_for_timeout(2000)
+            if otp: login_page.enter_otp(otp)
     except Exception:
-        # If .otp-digit doesn't appear, maybe login failed.
-        pass
+        # If we are already on dashboard, great
+        if "/dashboard" in page.url: pass
+
+    # Final check: Must be on dashboard
+    page.wait_for_url("**/dashboard", timeout=15000)
+    dashboard_page.is_visible()
     
     return page

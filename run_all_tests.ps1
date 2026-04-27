@@ -4,8 +4,8 @@ Write-Host "🚀 Starting Full Testing Pipeline..." -ForegroundColor Cyan
 
 # 1. Backend Tests
 Write-Host "`n[1/2] Running Backend Tests..." -ForegroundColor Yellow
-$env:PYTHONPATH="."
 Set-Location "backend"
+$env:PYTHONPATH="."
 & .\venv\Scripts\pytest
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Backend tests failed. Aborting pipeline." -ForegroundColor Red
