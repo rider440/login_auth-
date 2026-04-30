@@ -292,12 +292,15 @@ export default function TasksPage() {
             {userRole === 'employee' && (
               <form onSubmit={handleReportSubmit} className="mt-4 pb-6" style={{ borderBottom: '1px solid var(--card-border)', marginBottom: '1.5rem' }}>
                 <div className="form-group">
-                  <label>Current Status</label>
+                  <label>Report Status</label>
                   <select value={reportStatus} onChange={e => setReportStatus(e.target.value)}>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Completed">Completed</option>
                   </select>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    Note: This status is for your report only. Admin will update the final task status.
+                  </p>
                 </div>
                 <div className="form-group">
                   <label>What did you do today?</label>

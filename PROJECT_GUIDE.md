@@ -106,3 +106,14 @@ cd frontend
 npm install
 npm run dev
 ```
+1. Backend Tests
+
+<!-- powershell
+$env:PYTHONPATH="backend"
+backend\venv\Scripts\pytest backend\tests
+2. Frontend E2E Tests (Ensure the frontend is running at localhost:3000 first)
+
+powershell
+cd frontend
+$env:PYTHONPATH="."
+..\backend\venv\Scripts\pytest e2e -v -->

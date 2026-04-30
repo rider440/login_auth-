@@ -70,6 +70,12 @@ class DailyReportOut(DailyReportBase):
     company_id: int
     ReportDate: datetime
     created_at: datetime
+    
+    # Extra fields for the report
+    task_name: Optional[str] = None
+    project_name: Optional[str] = None
+    team_name: Optional[str] = None
+    employee_name: Optional[str] = None
 
     class Config:
         from_attributes = True

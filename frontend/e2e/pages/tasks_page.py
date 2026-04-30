@@ -3,16 +3,22 @@ from e2e.pages.base_page import BasePage
 class TasksPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
-        self.create_task_btn = page.locator("text=Create Task")
+        # "Add Task" button — only visible to admin
+        self.create_task_btn = page.locator("button:has-text('Add Task')")
+        # Form fields inside the "New Task" modal
         self.task_name_input = page.locator("label:has-text('Task Name') + input")
-        self.description_input = page.locator("textarea")
+        self.description_input = page.locator("label:has-text('Description') + input")
         self.status_select = page.locator("label:has-text('Status') + select")
         self.priority_select = page.locator("label:has-text('Priority') + select")
-        self.save_button = page.locator("button:has-text('Save Task')")
+        self.save_button = page.locator("button[type='submit']:has-text('Save Task')")
         self.table = page.locator(".data-table")
-        self.assign_modal = page.locator(".modal-content:has-text('Assign Employees')")
+        # Report / History modal — used by both admin and employee
+        self.report_modal = page.locator(".modal-content:has-text('Task Reports')")
+        # Action buttons in table
+        self.history_btn = page.locator(".action-btn[title='Reports History']")
 
     def open_create_modal(self):
+        self.create_task_btn.wait_for(state="visible", timeout=10000)
         self.create_task_btn.click()
 
     def fill_form(self, name, description, status="Pending", priority="Normal"):
@@ -27,10 +33,10 @@ class TasksPage(BasePage):
     def get_task_count(self):
         # Wait for any loading spinner to disappear
         self.page.wait_for_selector(".animate-spin", state="hidden", timeout=10000)
-        
+
         # If the table isn't there, it might be the empty state (count 0)
         if self.table.count() == 0:
             return 0
-            
+
         self.table.wait_for(state="visible", timeout=5000)
         return self.table.locator("tbody tr").count()

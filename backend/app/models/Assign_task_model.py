@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 class DailyReport(Base):
@@ -13,3 +14,7 @@ class DailyReport(Base):
     UpdateContent = Column(String, nullable=False)
     Status = Column(String, nullable=False) # Status updated at time of report
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    task = relationship("task", backref="reports")
+    employee = relationship("Employee", backref="reports")

@@ -243,18 +243,7 @@ def read_task(task_id: int, current_user = Depends(get_current_user), db: Sessio
     return db_task
 
 @app.put("/tasks/{task_id}", response_model=task_schemas.TaskOut)
-def update_task(task_id: int, task: task_schemas.TaskUpdate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    if current_user.role == "employee":
-        # Employees can ONLY change status of their own tasks
-        assignments = task_service.get_task_assignments(db, task_id, current_user.company_id)
-        if not any(a.emp_id == current_user.EmpId for a in assignments):
-             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
-        
-        # Only allow status update
-        task_data = task.model_dump(exclude_unset=True)
-        if any(key != "status" for key in task_data.keys()):
-             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees can only update task status")
-
+def update_task(task_id: int, task: task_schemas.TaskUpdate, current_user = Depends(require_admin), db: Session = Depends(get_db)):
     db_task = task_service.update_task(db, task_id, task, current_user.company_id)
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")

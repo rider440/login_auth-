@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, CheckSquare, LogOut, Menu, X, Briefcase, Settings, User as UserIcon, ChevronDown, Bell } from "lucide-react";
+import { LayoutDashboard, Users, CheckSquare, LogOut, Menu, X, Briefcase, Settings, User as UserIcon, ChevronDown, Bell, FileText } from "lucide-react";
 import { authService } from "@/services/api";
 
 interface UserData {
@@ -47,6 +47,7 @@ export default function DashboardLayout({
     { name: "Teams", href: "/dashboard/teams", icon: Users, adminOnly: true },
     { name: "Employees", href: "/dashboard/employees", icon: UserIcon, adminOnly: true },
     { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare },
+    { name: "Reports", href: "/dashboard/reports", icon: FileText },
   ];
 
   const getInitials = (name: string) => {

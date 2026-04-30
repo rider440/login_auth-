@@ -150,7 +150,12 @@ export default function DashboardPage() {
                 {recentReports.map((report: any) => (
                   <div key={report.ReportId} className="history-item">
                     <div className="flex justify-between items-start">
-                      <span className="date">{new Date(report.created_at).toLocaleString()}</span>
+                      <div className="flex flex-col">
+                        <span className="date">{new Date(report.created_at).toLocaleString()}</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginTop: '0.25rem' }}>
+                          {report.task_name} {report.project_name ? `(${report.project_name})` : ''}
+                        </span>
+                      </div>
                       <span className={`badge ${report.Status === 'Completed' ? 'badge-active' : 'badge-pending'}`} style={{ fontSize: '0.6rem' }}>
                         {report.Status}
                       </span>
