@@ -17,8 +17,9 @@ export default function TeamsPage() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
   
-  const [newTeam, setNewTeam] = useState({ 
+  const [formData, setFormData] = useState({ 
     TeamName: "", 
     project_id: 0,
     member_ids: [] as number[]
@@ -45,22 +46,41 @@ export default function TeamsPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newTeam.project_id === 0) return alert("Please select a project");
+    if (formData.project_id === 0) return alert("Please select a project");
     
     try {
-      await teamService.createTeam(newTeam);
-      setShowAddModal(false);
-      setNewTeam({ TeamName: "", project_id: 0, member_ids: [] });
+      if (editingTeamId) {
+        await teamService.updateTeam(editingTeamId, formData);
+      } else {
+        await teamService.createTeam(formData);
+      }
+      handleCloseModal();
       fetchData();
     } catch (err) {
-      alert("Failed to create team");
+      alert(`Failed to ${editingTeamId ? 'update' : 'create'} team`);
     }
   };
 
+  const handleEdit = (team: Team) => {
+    setEditingTeamId(team.TeamId);
+    setFormData({
+      TeamName: team.TeamName,
+      project_id: team.project_id,
+      member_ids: team.members.map(m => m.EmpId)
+    });
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingTeamId(null);
+    setFormData({ TeamName: "", project_id: 0, member_ids: [] });
+  };
+
   const toggleMember = (empId: number) => {
-    setNewTeam(prev => ({
+    setFormData(prev => ({
       ...prev,
       member_ids: prev.member_ids.includes(empId)
         ? prev.member_ids.filter(id => id !== empId)
@@ -101,9 +121,14 @@ export default function TeamsPage() {
                 <div className="stat-icon" style={{ background: 'rgba(236, 72, 153, 0.1)', color: 'var(--secondary)' }}>
                   <Users size={24} />
                 </div>
-                <button className="action-btn text-error" onClick={() => handleDelete(team.TeamId)}>
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex gap-1">
+                  <button className="action-btn" title="Edit Team" onClick={() => handleEdit(team)}>
+                    <Edit size={16} />
+                  </button>
+                  <button className="action-btn text-error" title="Delete Team" onClick={() => handleDelete(team.TeamId)}>
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               
               <h3>{team.TeamName}</h3>
@@ -112,7 +137,7 @@ export default function TeamsPage() {
                 <span>{projects.find(p => p.ProjectId === team.project_id)?.ProjectName || "Unknown Project"}</span>
               </div>
               
-              <div className="mt-auto">
+              <div className="mb-6">
                 <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Members ({team.members.length})</label>
                 <div className="flex -space-x-2 mt-2">
                   {team.members.slice(0, 5).map((member, i) => (
@@ -137,6 +162,16 @@ export default function TeamsPage() {
                   )}
                 </div>
               </div>
+
+              <div className="mt-auto">
+                <button 
+                  className="btn-small w-full" 
+                  style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--foreground)' }}
+                  onClick={() => window.location.href = `/dashboard/teams/${team.TeamId}`}
+                >
+                  View Team Profile
+                </button>
+              </div>
             </div>
           ))}
 
@@ -150,19 +185,19 @@ export default function TeamsPage() {
         </div>
       )}
 
-      {/* Add Team Modal */}
+      {/* Team Modal */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-content glass-card" style={{ maxWidth: '600px' }}>
-            <h2>Create Team</h2>
-            <form onSubmit={handleCreate} className="mt-4">
+            <h2>{editingTeamId ? "Edit Team" : "Create Team"}</h2>
+            <form onSubmit={handleSubmit} className="mt-4">
               <div className="form-group">
                 <label>Team Name</label>
                 <input 
                   type="text" 
                   required 
-                  value={newTeam.TeamName}
-                  onChange={(e) => setNewTeam({...newTeam, TeamName: e.target.value})}
+                  value={formData.TeamName}
+                  onChange={(e) => setFormData({...formData, TeamName: e.target.value})}
                   placeholder="e.g. Frontend Squad"
                 />
               </div>
@@ -171,8 +206,8 @@ export default function TeamsPage() {
                 <label>Select Project</label>
                 <select 
                    className="w-full p-3 rounded-xl border border-card-border bg-input-bg"
-                   value={newTeam.project_id}
-                   onChange={(e) => setNewTeam({...newTeam, project_id: parseInt(e.target.value)})}
+                   value={formData.project_id}
+                   onChange={(e) => setFormData({...formData, project_id: parseInt(e.target.value)})}
                    style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', background: 'var(--input-bg)', border: '1px solid var(--card-border)' }}
                 >
                   <option value={0}>Choose a project...</option>
@@ -189,10 +224,10 @@ export default function TeamsPage() {
                     <div 
                       key={emp.EmpId} 
                       onClick={() => toggleMember(emp.EmpId)}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${newTeam.member_ids.includes(emp.EmpId) ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors`}
                       style={{ 
-                        background: newTeam.member_ids.includes(emp.EmpId) ? 'var(--primary)' : 'transparent',
-                        color: newTeam.member_ids.includes(emp.EmpId) ? 'white' : 'inherit',
+                        background: formData.member_ids.includes(emp.EmpId) ? 'var(--primary)' : 'transparent',
+                        color: formData.member_ids.includes(emp.EmpId) ? 'white' : 'inherit',
                         marginBottom: '4px'
                       }}
                     >
@@ -204,10 +239,10 @@ export default function TeamsPage() {
               </div>
 
               <div className="flex gap-4 mt-6">
-                <button type="button" onClick={() => setShowAddModal(false)} style={{ background: 'rgba(0,0,0,0.1)', color: 'var(--foreground)' }}>
+                <button type="button" onClick={handleCloseModal} style={{ background: 'rgba(0,0,0,0.1)', color: 'var(--foreground)' }}>
                   Cancel
                 </button>
-                <button type="submit">Create Team</button>
+                <button type="submit">{editingTeamId ? "Update Team" : "Create Team"}</button>
               </div>
             </form>
           </div>
