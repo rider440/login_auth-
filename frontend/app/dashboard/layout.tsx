@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, CheckSquare, LogOut, Menu, X, Briefcase, Settings, User as UserIcon, ChevronDown, Bell, FileText } from "lucide-react";
+import { LayoutDashboard, Users, CheckSquare, LogOut, Menu, X, Briefcase, Settings, User as UserIcon, ChevronDown, Bell, FileText, LayoutGrid } from "lucide-react";
 import { authService } from "@/services/api";
 
 interface UserData {
@@ -59,7 +59,12 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className={`sidebar ${isMobileMenuOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-          <div className="logo-text">Employee Task Manager</div>
+          <div className="flex items-center gap-3">
+            <div className="project-identity-icon">
+              <LayoutGrid size={20} />
+            </div>
+            <div className="logo-text" style={{ marginBottom: 0 }}>Employee Task Manager</div>
+          </div>
           <button
             className="mobile-close"
             onClick={() => setIsMobileMenuOpen(false)}

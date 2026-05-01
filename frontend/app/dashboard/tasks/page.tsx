@@ -12,7 +12,7 @@ export default function TasksPage() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  
+
   // Daily Report Modal
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportTask, setReportTask] = useState<any>(null);
@@ -62,7 +62,7 @@ export default function TasksPage() {
       project_id: formData.project_id || null,
       team_id: formData.team_id || null
     };
-    
+
     try {
       if (editingId) {
         await taskService.updateTask(editingId, dataToSend);
@@ -182,7 +182,7 @@ export default function TasksPage() {
                       {userRole === 'admin' ? (
                         <>
                           <button className="action-btn" title="Reports History" onClick={() => handleOpenReport(task)}>
-                            <History size={18} />
+                            <History size={20} strokeWidth={2.5} style={{ color: '#a78bfa' }} />
                           </button>
                           <button className="action-btn" onClick={() => {
                             setEditingId(task.TaskId);
@@ -196,15 +196,15 @@ export default function TasksPage() {
                             });
                             setShowModal(true);
                           }}>
-                            <Edit size={18} />
+                            <Edit size={20} strokeWidth={2.5} style={{ color: '#6366f1' }} />
                           </button>
                           <button className="action-btn text-error" onClick={async () => {
-                             if(confirm("Delete task?")) {
-                               await taskService.deleteTask(task.TaskId);
-                               fetchData();
-                             }
+                            if (confirm("Delete task?")) {
+                              await taskService.deleteTask(task.TaskId);
+                              fetchData();
+                            }
                           }}>
-                            <Trash2 size={18} />
+                            <Trash2 size={20} strokeWidth={2.5} style={{ color: '#f87171' }} />
                           </button>
                         </>
                       ) : (
@@ -230,24 +230,24 @@ export default function TasksPage() {
             <form onSubmit={handleSubmit} className="mt-4">
               <div className="form-group">
                 <label>Task Name</label>
-                <input required value={formData.TaskName} onChange={e => setFormData({...formData, TaskName: e.target.value})} />
+                <input required value={formData.TaskName} onChange={e => setFormData({ ...formData, TaskName: e.target.value })} />
               </div>
               <div className="form-group">
                 <label>Description</label>
-                <input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
-              
+
               <div className="grid-2 gap-4">
                 <div className="form-group">
                   <label>Project</label>
-                  <select value={formData.project_id} onChange={e => setFormData({...formData, project_id: parseInt(e.target.value)})}>
+                  <select value={formData.project_id} onChange={e => setFormData({ ...formData, project_id: parseInt(e.target.value) })}>
                     <option value={0}>No Project</option>
                     {projects.map(p => <option key={p.ProjectId} value={p.ProjectId}>{p.ProjectName}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Team</label>
-                  <select value={formData.team_id} onChange={e => setFormData({...formData, team_id: parseInt(e.target.value)})}>
+                  <select value={formData.team_id} onChange={e => setFormData({ ...formData, team_id: parseInt(e.target.value) })}>
                     <option value={0}>No Team</option>
                     {teams.map(t => <option key={t.TeamId} value={t.TeamId}>{t.TeamName}</option>)}
                   </select>
@@ -257,7 +257,7 @@ export default function TasksPage() {
               <div className="grid-2 gap-4">
                 <div className="form-group">
                   <label>Status</label>
-                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                  <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Completed">Completed</option>
@@ -265,7 +265,7 @@ export default function TasksPage() {
                 </div>
                 <div className="form-group">
                   <label>Priority</label>
-                  <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}>
+                  <select value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
                     <option value="Low">Low</option>
                     <option value="Normal">Normal</option>
                     <option value="High">High</option>
@@ -288,7 +288,7 @@ export default function TasksPage() {
           <div className="modal-content glass-card" style={{ maxWidth: '600px' }}>
             <h2>Task Reports & History</h2>
             <p className="subtitle">Activity for: {reportTask?.TaskName}</p>
-            
+
             {userRole === 'employee' && (
               <form onSubmit={handleReportSubmit} className="mt-4 pb-6" style={{ borderBottom: '1px solid var(--card-border)', marginBottom: '1.5rem' }}>
                 <div className="form-group">
@@ -304,7 +304,7 @@ export default function TasksPage() {
                 </div>
                 <div className="form-group">
                   <label>What did you do today?</label>
-                  <textarea 
+                  <textarea
                     required
                     rows={3}
                     value={reportContent}
@@ -321,7 +321,7 @@ export default function TasksPage() {
               <h3 style={{ fontSize: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <History size={18} /> Update History
               </h3>
-              
+
               {isLoadingReports ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="animate-spin text-primary" size={24} />

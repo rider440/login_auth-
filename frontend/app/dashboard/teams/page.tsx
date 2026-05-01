@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { teamService, projectService, employeeService } from "@/services/api";
-import { Plus, Users, Briefcase, User as UserIcon, Trash2 } from "lucide-react";
+import { Plus, Users, Briefcase, User as UserIcon, Trash2, Edit } from "lucide-react";
 
 interface Team {
   TeamId: number;
